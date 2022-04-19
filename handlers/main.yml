@@ -1,0 +1,13 @@
+---
+# handlers file for rvr-powersurpluslogger-role/
+  - name: (re)start the rvr-powersurpluslogger.service
+    become: true
+    ansible.builtin.systemd:
+      name: rvr-powersurpluslogger
+      enabled: yes
+      state: restarted
+
+  - name: Reload the systemd daemon
+    become: true
+    ansible.builtin.systemd:
+      daemon_reload: yes

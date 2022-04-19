@@ -1,0 +1,44 @@
+---
+# tasks file for rvr-powersurpluslogger-role/
+# It currently installs the program under the directory /home/username/ which is quite dirty. 
+# Perhaps I'll create a better folder for it in the future.
+# Most likely I wont' as it works just fine for me.
+# Call me lazy...
+
+  - name: Create rvr-powersurpluslogger directory
+    become: true
+    become_user: "{{ user }}"
+    file: 
+      path: "/home/{{ user }}/rvr-powersurpluslogger"
+      state: directory
+      recurse: 'yes'
+
+  - name: Git checkout rvr-powersurplusloggger
+    become: true
+    become_user: "{{ user }}"
+    ansible.builtin.git:
+      repo: git@github.com:robertreems/rvr-powersurpluslogger.git
+      dest: "/home/{{ user }}/rvr-powersurpluslogger"
+    notify: (re)start the rvr-powersurpluslogger.service
+
+  - name: Set config file /etc/rvr/config.ini
+    become: true
+    blockinfile:
+      path: "/etc/rvr/config.ini"
+      block: | 
+        [AZ_LOG_ANALYTICS_WORKSPACE]
+        workspace_id = {{ log_analytics_workspace_id }}
+        primary_key = {{ log_analytics_primary_key }}
+
+        [HOME_WIZARD_P1]
+        hwip = {{ hwip }}
+      state: present
+      create: yes
+    notify: (re)start the rvr-powersurpluslogger.service
+
+  - name: Set Systemctl service file
+    become: true
+    ansible.builtin.template:
+      src: ./templates/rvr-powersurpluslogger.service.j2
+      dest: /etc/systemd/system/rvr-powersurpluslogger.service
+    notify: Reload the systemd daemon
