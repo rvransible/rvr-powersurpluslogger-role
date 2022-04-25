@@ -19,6 +19,7 @@
     ansible.builtin.git:
       repo: git@github.com:robertreems/rvr-powersurpluslogger.git
       dest: "/home/{{ user }}/rvr-powersurpluslogger"
+      version: main
     notify: (re)start the rvr-powersurpluslogger.service
 
   - name: Set config file /etc/rvr/config.ini
