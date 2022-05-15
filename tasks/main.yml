@@ -22,24 +22,39 @@
       version: main
     notify: (re)start the rvr-powersurpluslogger.service
 
-  - name: Set config file /etc/rvr/config.ini
-    become: true
-    blockinfile:
-      path: "/etc/rvr/config.ini"
-      block: | 
-        [AZ_LOG_ANALYTICS_WORKSPACE]
-        workspace_id = {{ log_analytics_workspace_id }}
-        primary_key = {{ log_analytics_primary_key }}
-
-        [HOME_WIZARD_P1]
-        hwip = {{ hwip }}
-      state: present
-      create: yes
-    notify: (re)start the rvr-powersurpluslogger.service
-
   - name: Set Systemctl service file
     become: true
     ansible.builtin.template:
       src: ./templates/rvr-powersurpluslogger.service.j2
       dest: /etc/systemd/system/rvr-powersurpluslogger.service
     notify: Reload the systemd daemon
+
+  - name: Logs daily power meters to Azure
+    become: true
+    become_user: robert
+    ansible.builtin.cron:
+      name: "Logs daily power meters"
+      minute: "45"
+      hour: "23"
+      job: "/home/robert/rvr-powersurpluslogger/rvrstatisticslogger/main.py --log_to_azure"
+
+  - name: Logs weekly power meters to Azure
+    become: true
+    become_user: robert
+    ansible.builtin.cron:
+      name: "Logs weekly power meters"
+      minute: "50"
+      hour: "23"
+      job: "/home/robert/rvr-powersurpluslogger/rvrstatisticslogger/main.py --log_to_azure -w"
+      weekday: 0 # sunday
+
+  # Used this method: https://stackoverflow.com/a/7204103
+  - name: Logs monthly power meters to Azure
+    become: true
+    become_user: robert
+    ansible.builtin.cron:
+      name: "Logs monthly power meters"
+      minute: "55"
+      hour: "23"
+      job: "[ $(date -d +1day +%d) -eq 1 ] /home/robert/rvr-powersurpluslogger/rvrstatisticslogger/main.py --log_to_azure -m"
+      day: 28-31
