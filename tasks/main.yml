@@ -56,5 +56,5 @@
       name: "Logs monthly power meters"
       minute: "55"
       hour: "23"
-      job: "[ $(date -d +1day +%d) -eq 1 ] /home/robert/rvr-powersurpluslogger/rvrstatisticslogger/main.py --log_to_azure -m"
+      job: "[ $(date -d +1day +%d) -eq 1 ] && /home/robert/rvr-powersurpluslogger/rvrstatisticslogger/main.py --log_to_azure -m"
       day: 28-31
